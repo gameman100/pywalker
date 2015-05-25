@@ -17,7 +17,7 @@ How to install python3.4?
 
 sudo tar -xf Python-3.4.3.taz
 cd Python-3.4.3
-./configure --prefix=/usr/local --with-universal-archs=64-bit --with-shared --with-ctypes
+./configure --prefix=/usr/local --with-universal-archs=64-bit --enable-shared
 make all
 sudo make altinstall
 
@@ -25,7 +25,7 @@ sudo make altinstall
 # add .so path to search path 
 cd /etc/ld.so.conf
 add '/usr/local/lib' to the .conf file
-run 'ldconfig' apply the changes
+run 'sudo ldconfig' apply the changes
 
 --------------------------------------
 /How to load wsgi?
