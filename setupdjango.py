@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-__author__=jinxizeng
+__author__='jinxizeng'
 
 """
 DO NOT run this script on Windows!
@@ -82,20 +82,20 @@ current_path = os.path.abspath(os.curdir)
 # install Django
 os.chdir(django)
 print('starting install Django from', os.path.abspath(os.curdir))
-os.system("python3.4 setup.py install")
+os.system("sudo python3.4 setup.py install")
 
 # install mysql connector
 os.chdir(current_path)
 os.chdir(mysql)
 print('starting install mysql connector from', os.path.abspath(os.curdir))
-os.system("python3.4 setup.py install")
+os.system("sudo python3.4 setup.py install")
 
 # install wsgi
 os.chdir(current_path)
 os.chdir(wsgi)
 print('starting install mysql connector from', os.path.abspath(os.curdir))
 os.system("./configure --with-python=/usr/local/bin/python3.4")
-os.system("make all")
+os.system("make")
 os.system("sudo make install")
 
 
