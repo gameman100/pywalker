@@ -1,0 +1,6 @@
+https://www.python.org/
+http://dev.mysql.com/
+http://httpd.apache.org/
+http://cordova.apache.org/
+https://nodejs.org/
+http://redis.io/

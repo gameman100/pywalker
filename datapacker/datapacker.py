@@ -1,27 +1,20 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-   
+#!/bin/usr/env python3   
 import sys
 import shutil, io, os, glob, subprocess
 import csv
 import types
 import xlrd # must install xlrd!
-#import google.protobuf # must install protobuf
 
 TYPE_INT32='int32'
 TYPE_FLOAT='float'
 TYPE_Bool='bool'
 TYPE_STRING='string'
 
-"""
-DESC: show some help
-"""
-def help():
-    print("How to use?")
 
-"""
-DESC: convert .csv(ascii format) files to .txt(utf-8 format) files
-"""
 def CsvToTxt( csvpath, outputpath ):
+    """
+    DESC: convert .csv(ascii format) files to .txt(utf-8 format) files
+    """
     #stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
     #reload(sys)
     #sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
@@ -57,15 +50,15 @@ def CsvToTxt( csvpath, outputpath ):
 
     os.chdir(curpath)
 
-"""
-DESC: Export .Net class files from excel sheet
-eg: ExcelToDotNet("", "Game", "GameInfo")
-@inpu_path: excel path
-@namespace: class namespace
-@gameinfoclass: gameinfo class name
-"""
-def ExcelToDotNet( inpu_path, namespace, gameinfoclass ):
 
+def ExcelToDotNet( inpu_path, namespace, gameinfoclass ):
+    """
+    DESC: Export .Net class files from excel sheet
+    eg: ExcelToDotNet("", "Game", "GameInfo")
+    @inpu_path: excel path
+    @namespace: class namespace
+    @gameinfoclass: gameinfo class name
+    """
     current_path = os.getcwd()
     
     # change dir to current dir
@@ -144,12 +137,11 @@ def ExcelToDotNet( inpu_path, namespace, gameinfoclass ):
 
 
 
-"""
-DESC: export to json format file
-eg: ExcelTOJSON("\\", "\\", 'test.bin', 'GameInfo')
-"""
 def ExcelTOJSON( excel_path, output_path, output_filename, classname ):
-
+    """
+    DESC: export to json format file
+    eg: ExcelTOJSON("\\", "\\", 'test.bin', 'GameInfo')
+    """
     curpath = os.getcwd()
     print('curdir:' + os.getcwd())
 
@@ -379,7 +371,7 @@ def MakeGameinfo( excel_path, output_path, output_filename, classname ):
     #reload(sys)
     #sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
     #sys.setdefaultencoding("utf-8")
-    #print("测试的章")
+    #print("???��????????")
     exec('import {0}_pb2'.format(classname))
 
     curpath = os.getcwd()
