@@ -3,147 +3,126 @@ import sys
 import shutil, io, os, glob, subprocess
 import csv
 import types
+import json
 import xlrd # must install xlrd!
 
-TYPE_INT32='int32'
-TYPE_FLOAT='float'
-TYPE_Bool='bool'
-TYPE_STRING='string'
 
 
-def CsvToTxt( csvpath, outputpath ):
+def excel2class( inpu_path='', namespace='', gameinfoclass='GameInfo', lang=LANG_CS ):
     """
-    DESC: convert .csv(ascii format) files to .txt(utf-8 format) files
+    export class files from excel sheet
+    :param inpu_path: relative excel path to current workspace
+    :param namespace: class namespace
+    :param gameinfoclass: gameinfo class name
+    :param lang: langauge, only support c sharp currently
+    :return: None
     """
-    #stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
-    #reload(sys)
-    #sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
-    #sys.setdefaultencoding("utf-8")
-    curpath = os.getcwd()
-    print('curdir:' + os.getcwd())
-
-    inputpath = curpath + csvpath
-    print('inputidr:' + os.getcwd())
-    
-    os.chdir( inputpath )
-    
-    csvfiles = glob.glob('*.csv')
-    print ( 'found ({0}) csv files'.format( len(csvfiles) ) )
-    print('')
-    
-    for f in csvfiles:
-        print ( 'process: {0}'.format(f) )
-        with open(f, 'r' ) as openfile:
-            content = openfile.read()
-            #content = content.decode("cp936")
-            #content = content.encode("UTF-8")
-            txtname = f.partition('.')
-            txtname = txtname[0] + '.txt'
-            with open (txtname, 'w', encoding = 'utf-8') as outputfile:
-                outputfile.write(content)
-    
-    txtfiles = glob.glob('*.txt')
-    for f in txtfiles:
-         target = '{0}{1}'.format( curpath + outputpath, f )
-         shutil.copy( f, target )
-         print('copy {0} to {1}'.format(f, target))
-
-    os.chdir(curpath)
-
-
-def ExcelToDotNet( inpu_path, namespace, gameinfoclass ):
-    """
-    DESC: Export .Net class files from excel sheet
-    eg: ExcelToDotNet("", "Game", "GameInfo")
-    @inpu_path: excel path
-    @namespace: class namespace
-    @gameinfoclass: gameinfo class name
-    """
-    current_path = os.getcwd()
-    
-    # change dir to current dir
+    current_path = os.path.abspath( os.getcwd() )
     os.chdir(current_path + inpu_path)
-
-    # get all excel file names
     excel_files = glob.glob('*.xlsx')
 
-    # create empty list for gameinfo properties
-    gameinfo_property = []
+    # all output files saved int a folder called 'dist'
+    dir_dist = 'dist'
+    if not os.path.isdir(dir_dist):
+        os.mkdir(dir_dist)
 
-    # create empty list for .net file names
-    dotnet_files = []
+    excel_sheets = []
+    class_files = []
 
     # check each excel
     for excel in excel_files:
         if excel.startswith("~"):
             continue
         book = xlrd.open_workbook( excel )
-        print ( "The number of worksheets is", book.nsheets )
+        print ( "The number of worksheet is", book.nexcel_sheets )
         print ( "Worksheet name(s):", book.sheet_names() )
-        if book.nsheets == 0:
+        if book.nexcel_sheets == 0:
             continue
         
         # check each excel sheet
         for sheetname in book.sheet_names():
-
-            # get sheet name
             sheet = book.sheet_by_name(sheetname)
+           
+            excel_sheets.append(sheetname)
+            class_files.append(sheetname)
 
-            # every sheet is a class and put it into gameinfo class
-            gameinfo_property.append(sheetname)
+            # write c shart class files
+            if lang==LANG_CS:
+                output_filename = os.path.normpath('{0}/{1}.cs'.format(dir_dist, sheetname))
 
-            # output .cs file
-            output_filename = sheetname + '.cs'
-
-            # 
-            dotnet_files.append(sheetname)
-
-            with open( output_filename, 'w', encoding='utf-8' ) as targetf:
+                with open( output_filename, 'w', encoding='utf-8' ) as targetf:
   
-                targetf.write('using System.Collections;\n\n' )
-                targetf.write('namespace {0}{1}\n\n'.format(namespace,"{") )
-                targetf.write('    public class {0}{1} \n'.format(sheetname,"{") )
-                # write class name
-                for r in range(0,sheet.nrows):
-                    for c in range(0,sheet.ncols):
-                        #print ("Cell:", sheet.cell_value(rowx=r, colx=c) )
-                        data = sheet.cell_value(rowx=r, colx=c)
-                        parts = data.partition('.')
-                        data_type = parts[0]
-                        data_real = parts[2]
-                        #if c == sheet.ncols-1:
-                        #    sep='\n'
-                        targetf.write('        public {0} {1};\n'.format(data_type, data_real) )
-                    break
-                targetf.write('    }\n}')
-                
-    # create game info below
-    gameinfo_output_path =  gameinfoclass + '.cs'
-    print ( 'oupput game info:' + gameinfo_output_path )
-    with open( gameinfo_output_path, 'w', encoding='utf-8' ) as targetf:
-        targetf.write('using System.Collections;\n\n' )
-        targetf.write('using System.Collections.Generic;\n\n' )
-        targetf.write('namespace {0}{1}\n\n'.format(namespace,"{") )
-        targetf.write('    public class {0}{1} \n'.format(gameinfoclass,"{") )
-        
-        for datatype in gameinfo_property:
-            print ( datatype )
-            dataname = datatype.lower()
-            targetf.write('        public List<{0}> {1};\n'.format(datatype, dataname) )
-            
-        targetf.write('    }\n}')
+                    targetf.write('using System.Collections;\n' )
+                    targetf.write('using System.Collections.Generic;\n\n' )
+                    if len(namespace)>0:
+                        targetf.write('namespace {0}{1}\n\n'.format(namespace,"{") )
+                    targetf.write('    public class {0}{1} \n'.format(sheetname,"{") )
+                   
+                    for r in range(0,sheet.nrows):   # write class name
+                        for c in range(0,sheet.ncols):
+                            #print ("Cell:", sheet.cell_value(rowx=r, colx=c) )
+                            data = sheet.cell_value(rowx=r, colx=c)
+                            parts = data.partition('.')
+                            data_type = parts[0]
+                            data_real = parts[2]
+                            #if c == sheet.ncols-1:
+                            #    sep='\n'
+                            if data_type == TYPE_IARRAY:
+                                data_type = 'List<int>'
+                            if data_type == TYPE_FARRAY:
+                                data_type = 'List<float>'
+                            if data_type == TYPE_DARRAY:
+                                data_type = 'List<double>'
+                            if data_type == TYPE_SARRAY:
+                                data_type = 'List<string>'
+                            elif data_type == TYPE_IDIC:
+                                data_type = 'Dictionary<int,int>'
+                            elif data_type == TYPE_FDIC:
+                                data_type = 'Dictionary<int,float>'
+                            elif data_type == TYPE_DDIC:
+                                data_type = 'Dictionary<int,double>'
+                            elif data_type == TYPE_SDIC:
+                                data_type = 'Dictionary<int,string>'
+                            targetf.write('        public {0} {1};\n'.format(data_type, data_real) )
+                        break
+                    if len(namespace)>0:
+                        targetf.write('    }')
+                    targetf.write('\n}')
 
+            # wirte game info
+            gameinfo_output_path = os.path.normpath('{0}/{1}.cs'.format(dir_dist, gameinfoclass))
+            print ( 'oupput game info:' + gameinfo_output_path )
+            with open( gameinfo_output_path, 'w', encoding='utf-8' ) as targetf:
+                targetf.write('using System.Collections;\n\n' )
+                targetf.write('using System.Collections.Generic;\n\n' )
+                if len(namespace)>0:
+                    targetf.write('namespace {0}{1}\n\n'.format(namespace,"{") )
+                targetf.write('    public class {0}{1} \n'.format(gameinfoclass,"{") )
+        
+                # write fields
+                for datatype in excel_sheets:
+                    # print ( datatype )
+                    dataname = datatype.lower()
+                    targetf.write('        public List<{0}> {1};\n'.format(datatype, dataname) )
+                # done
+                if len(namespace)>0:
+                    targetf.write('    }')
+                targetf.write('\n}')
+                
     os.chdir(current_path)
 
 
 
-def ExcelTOJSON( excel_path, output_path, output_filename, classname ):
+def ExcelTOJSON( excel_path, output_path, output_filename ):
     """
-    DESC: export to json format file
-    eg: ExcelTOJSON("\\", "\\", 'test.bin', 'GameInfo')
+    export to json format file from excel data
+    :param excel_path: relative excel path to current workspace
+    :param output_path: relative path to current workspace
+    :param output_filename: output filename
+    :return: None
     """
-    curpath = os.getcwd()
-    print('curdir:' + os.getcwd())
+    curpath = os.path.abspath( os.getcwd() )
+    print('curdir:' + curpath)
 
     inputpath = curpath + excel_path
     os.chdir( inputpath )
@@ -154,7 +133,7 @@ def ExcelTOJSON( excel_path, output_path, output_filename, classname ):
         if '~' in excel:
             continue
         book = xlrd.open_workbook(inputpath  + excel)
-        print ("The number of worksheets is", book.nsheets)
+        print ("The number of worksheets is", book.nexcel_sheets)
         print ("Worksheet name(s):", book.sheet_names())
         
         # for in excel sheet
@@ -231,9 +210,55 @@ def ExcelTOJSON( excel_path, output_path, output_filename, classname ):
         # io output
         output = curpath + output_path;
         with open(output + output_filename, 'w', encoding = 'utf-8') as targetf:
+            json.dum
             targetf.write(jsondata)
         print("\noutput:{0}".format(output + output_filename))
 
+    os.chdir(curpath)
+
+def csv2txt( csvpath, outputpath ):
+    """
+    convert .csv(ascii format) files to .txt(utf-8 format) files
+    :param csvpath: relative path to current workspace
+    :param outputpath: relative path to current workspace
+    :return: None
+    """
+    #stdin, stdout, stderr = sys.stdin, sys.stdout, sys.stderr
+    #reload(sys)
+    #sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
+    #sys.setdefaultencoding("utf-8")
+    curpath = os.path.abspath( os.getcwd() )
+    print('curdir:' + curpath)
+
+    inputpath = curpath + csvpath
+    print('inputidr:' + inputpath)
+    
+    os.chdir( inputpath )
+    
+    csvfiles = glob.glob('*.csv')
+    print ( 'found ({0}) csv files\n'.format( len(csvfiles) ) )
+    
+    for f in csvfiles:
+        print ( 'process: {0}'.format(f) )
+        with open(f, 'r' ) as openfile:
+            content = openfile.read()
+            #content = content.decode("cp936")
+            #content = content.encode("UTF-8")
+            txtname = f.partition('.')
+            txtname = txtname[0] + '.txt'
+            with open (txtname, 'w', encoding = 'utf-8') as outputfile:
+                outputfile.write(content)
+    
+    txtfiles = glob.glob('*.txt')
+    for f in txtfiles:
+         target = '{0}{1}'.format( curpath + outputpath, f )
+         shutil.copy( f, target )
+         print('copy {0} to {1}'.format(f, target))
+
+    os.chdir(curpath)
+
+
+# below codes are unsafe, do not use.
 
 """
 Export excel data to protobuf file
@@ -253,7 +278,7 @@ def ExcelToProtobuf( inpu_path, packagename, gameinfoname ):
     excel_files = glob.glob('*.xlsx')
 
     # create empty list for gameinfo properties
-    gameinfo_property = []
+    excel_sheets = []
 
     # create empty list for protobuf file names
     proto_files = []
@@ -263,7 +288,7 @@ def ExcelToProtobuf( inpu_path, packagename, gameinfoname ):
         if excel.startswith("~"):
             continue
         book = xlrd.open_workbook(  excel )
-        print ("The number of worksheets is", book.nsheets )
+        print ("The number of workexcel_sheets is", book.nexcel_sheets )
         print ("Worksheet name(s):", book.sheet_names())
         
         # check each excel sheet
@@ -273,7 +298,7 @@ def ExcelToProtobuf( inpu_path, packagename, gameinfoname ):
             sheet = book.sheet_by_name(sheetname)
 
             # every sheet is a class and put it into gameinfo class
-            gameinfo_property.append(sheetname)
+            excel_sheets.append(sheetname)
 
             # output .proto file
             output_filename = sheetname + '.proto'
@@ -309,14 +334,14 @@ def ExcelToProtobuf( inpu_path, packagename, gameinfoname ):
     #with open( gameinfo_output_path, 'w' ) as targetf:
         targetf.write('package {0};\n\n'.format(packagename) )
         
-        for dataname in gameinfo_property:
+        for dataname in excel_sheets:
             targetf.write('import \"{0}.proto\";\n'.format(dataname) )
         
         targetf.write('\n')
         targetf.write('message {0}{1} \n'.format(gameinfoname,'{') )
         
         index =0
-        for datatype in gameinfo_property:
+        for datatype in excel_sheets:
             print ( datatype )
             index+=1
             dataname = datatype.lower()
@@ -371,7 +396,7 @@ def MakeGameinfo( excel_path, output_path, output_filename, classname ):
     #reload(sys)
     #sys.stdin, sys.stdout, sys.stderr = stdin, stdout, stderr
     #sys.setdefaultencoding("utf-8")
-    #print("???ии????????")
+    #print("???????????им????????им????????")
     exec('import {0}_pb2'.format(classname))
 
     curpath = os.getcwd()
@@ -388,7 +413,7 @@ def MakeGameinfo( excel_path, output_path, output_filename, classname ):
         if '~' in excel:
             continue
         book = xlrd.open_workbook(inputpath + excel)
-        print ("The number of worksheets is", book.nsheets)
+        print ("The number of workexcel_sheets is", book.nexcel_sheets)
         print ("Worksheet name(s):", book.sheet_names())
         
         # for in excel sheet
