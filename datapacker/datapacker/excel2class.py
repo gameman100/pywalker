@@ -8,12 +8,12 @@ class Excel2Class(object):
     export classes from excels
     """
     # define types
-    TYPE_INT32 = 'int32'
-    TYPE_INT64 = 'int64'
-    TYPE_FLOAT = 'float'
-    TYPE_DOUBLE = 'double'
-    TYPE_Bool = 'bool'
-    TYPE_STRING = 'string'
+    TYPE_INT32 = 'i'  # int
+    TYPE_INT64 = 'i64'  # int64
+    TYPE_FLOAT = 'f'  # float
+    TYPE_DOUBLE = 'd'  # double
+    TYPE_Bool = 'b'  # bool
+    TYPE_STRING = 's'  # string
 
     # List
     TYPE_IARRAY = 'array'  # List<int>
@@ -114,18 +114,39 @@ class Excel2Class(object):
                 for c in range(0, sheet.ncols):
                     # print ("Cell:", sheet.cell_value(rowx=r, colx=c) )
                     data = sheet.cell_value(rowx=r, colx=c)
-                    parts = data.partition('.')
-                    data_type = parts[0]
-                    data_real = parts[2]
+                    data.strip()
+                    data_type = ''  # field type
+                    data_real = ''  # field name
+                    if '.' in data:
+                        parts = data.partition('.')  # old stype int.id
+                        data_type = parts[0]
+                        data_real = parts[2]
+                    elif ':' in data:
+                        parts = data.partition(':')  # new stype id:int
+                        data_type = parts[2]
+                        data_real = parts[0]
+                    # print(data_type, data_real)
                     # if c == sheet.ncols-1:
                     #    sep='\n'
-                    if data_type == Excel2Class.TYPE_IARRAY:
+                    if data_type == Excel2Class.TYPE_INT32:
+                        data_type = 'int'
+                    if data_type == Excel2Class.TYPE_INT64:
+                        data_type = 'System.Int64'
+                    if data_type == Excel2Class.TYPE_FLOAT:
+                        data_type = 'float'
+                    if data_type == Excel2Class.TYPE_DOUBLE:
+                        data_type = 'double'
+                    if data_type == Excel2Class.TYPE_Bool:
+                        data_type = 'bool'
+                    if data_type == Excel2Class.TYPE_STRING:
+                        data_type = 'string'
+                    if data_type == Excel2Class.TYPE_IARRAY or data_type == 'arr':
                         data_type = 'List<int>'
-                    if data_type == Excel2Class.TYPE_FARRAY:
+                    if data_type == Excel2Class.TYPE_FARRAY or data_type == 'farr':
                         data_type = 'List<float>'
-                    if data_type == Excel2Class.TYPE_DARRAY:
+                    if data_type == Excel2Class.TYPE_DARRAY or data_type == 'darr':
                         data_type = 'List<double>'
-                    if data_type == Excel2Class.TYPE_SARRAY:
+                    if data_type == Excel2Class.TYPE_SARRAY or data_type == 'sarr':
                         data_type = 'List<string>'
                     elif data_type == Excel2Class.TYPE_IDIC:
                         data_type = 'Dictionary<int,int>'
@@ -136,16 +157,18 @@ class Excel2Class(object):
                     elif data_type == Excel2Class.TYPE_SDIC:
                         data_type = 'Dictionary<int,string>'
                     targetf.write('        public {0} {1};\n'.format(data_type, data_real))
-                break
+
+                break  # only scan the first row
             if len(self.namespace) > 0:
                 targetf.write('    }')
             targetf.write('\n}')
+            print('output game info:', output_filename)
 
 
     def write_cs_gameinfo(self):
         # wirte game info
         gameinfo_output_path = os.path.normpath('{0}/{1}.cs'.format(self.output_path, self.gameinfoclass))
-        print('output game info:', gameinfo_output_path)
+
         with open(gameinfo_output_path, 'w', encoding='utf-8') as targetf:
             targetf.write('using System.Collections;\n\n')
             targetf.write('using System.Collections.Generic;\n\n')
@@ -161,3 +184,5 @@ class Excel2Class(object):
             if len(self.namespace) > 0:
                 targetf.write('    }')
             targetf.write('\n}')
+
+        print('output game info:', gameinfo_output_path)
