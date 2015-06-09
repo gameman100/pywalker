@@ -192,6 +192,9 @@ class Excel2Data(object):
                             elif fieldtype == Excel2Class.TYPE_FLOAT or fieldtype == Excel2Class.TYPE_DOUBLE:
                                 data = float(data)
                                 data = round(data, 2)
+                            elif fieldtype == Excel2Class.TYPE_STRING or fieldtype == "string":
+                                data = str(data)
+                                data = data.replace("\"", "\\\"")
                             else:
                                 data = str(data)
 

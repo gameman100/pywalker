@@ -2,7 +2,7 @@ import sys, shutil, io, re, os
 
 class SmartCopy:
 
-    def __init( self ):
+    def __init__( self ):
         print("create SmartCopy instance")
 
     # pure virtaul function, you may want to override it for the special case
@@ -37,13 +37,20 @@ class SmartCopy:
                 
                 #outputfile = os.path.join(outputpath, subpath)
                 outputfile = "{0}{1}".format( outputpath, subpath )
+                print(outputfile)
 
                 # check if output dir exist
                 outputsubpath = outputfile.rpartition('\\')
                 outputsubpath = outputsubpath[0]
-                if not os.path.exists( outputsubpath ):
-                  os.mkdir ( outputsubpath )
-                  print( "create new dir: {0}".format( outputsubpath ) )
+                if len(outputsubpath)>0 and not os.path.exists( outputsubpath ):
+                    print( "create new dir: {0}".format( outputsubpath ) )
+                    dirs = outputsubpath.split('\\')
+                    dr = ''
+                    for d in dirs:
+                        dr =dr+d +'\\'
+                        if not os.path.exists(dr):
+                            os.mkdir ( dr )
+                  
 
                 # check pattern
                 ispass = False
@@ -66,7 +73,7 @@ class SmartCopy:
 
 # example class
 class MLAniamtionCopy(SmartCopy):
-    def __init(self, pattern ):
+    def __init___(self, pattern ):
         print("create MLAniamtionCopy instance")
         
     # override
@@ -84,7 +91,7 @@ class MLAniamtionCopy(SmartCopy):
 
 if __name__=='__main__':
     # donot copy psd files
-    patterns = {".psd"}
+    patterns = [".psd", ".exe", ".rar"]
     smart = MLAniamtionCopy()
-    smart.copydata("D:/Card2/trunk/Art/rawdata/动画MAX文件", "D:/output", patterns )
+    smart.copydata("D:/Card2/trunk/Art/rawdata/", "D:/output/", patterns )
 

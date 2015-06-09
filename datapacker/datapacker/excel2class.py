@@ -98,7 +98,7 @@ class Excel2Class(object):
         os.chdir(current_path)
 
 
-    def write_cs(self, sheet: xlrd.sheet.Sheet, sheetname):
+    def write_cs(self, sheet: xlrd.sheet.Sheet, sheetname: str):
         """
         """
         output_filename = os.path.normpath('{0}/{1}.cs'.format(self.output_path, sheetname))
