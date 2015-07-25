@@ -31,7 +31,7 @@ class Excel2Data(object):
 
 
 
-    def make_json(self, filename):
+    def make_json(self):
         """
         export json format file from excel sheet
         https://www.json.com/
@@ -129,15 +129,13 @@ class Excel2Data(object):
         for excel in excel_files:
             if '~' in excel:
                 continue
-            book = xlrd.open_workbook(os.path.normpath(os.path.join(self.input_path,excel)))
+            book = xlrd.open_workbook(os.path.normpath(os.path.join(self.input_path, excel)))
             print("The number of worksheets is", book.nsheets)
             print("Worksheet name(s):", book.sheet_names())
 
             # for in excel sheet
             listlenght = len(book.sheet_names())
             listindex = 0
-
-
 
             for sheetname in book.sheet_names():
                 listindex += 1
@@ -230,8 +228,12 @@ class Excel2Data(object):
             os.chdir(curpath)
             # print("raw json:" + jsondata)
             # io output
+
+            outputname = excel.rpartition('.')
+            outputname = outputname[0]
+
             output = os.path.normpath(os.path.join(curpath, self.output_path))
-            output = os.path.normpath(os.path.join(output, filename+'.bin'))
+            output = os.path.normpath(os.path.join(output, outputname + '.bin'))
 
             with open(output, 'w', encoding='utf-8') as targetf:
                 # json.dump(jsondata, targetf, ensure_ascii=False)
